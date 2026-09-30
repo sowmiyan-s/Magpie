@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#FFFDF8" rx="12"/>
+  <!-- Head -->
+  <rect x="24" y="36" width="80" height="70" rx="8" fill="#FFE600" stroke="#000" stroke-width="4"/>
+  <!-- Antenna -->
+  <line x1="64" y1="36" x2="64" y2="20" stroke="#000" stroke-width="4"/>
+  <circle cx="64" cy="16" r="6" fill="#B87AFF" stroke="#000" stroke-width="3"/>
+  <!-- Eyes -->
+  <circle cx="44" cy="64" r="14" fill="#7DFFB3" stroke="#000" stroke-width="3"/>
+  <circle cx="84" cy="64" r="14" fill="#7DFFB3" stroke="#000" stroke-width="3"/>
+  <!-- Pupils (crosshairs) -->
+  <circle cx="44" cy="64" r="5" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="44" y1="54" x2="44" y2="74" stroke="#000" stroke-width="2"/>
+  <line x1="34" y1="64" x2="54" y2="64" stroke="#000" stroke-width="2"/>
+  <circle cx="84" cy="64" r="5" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="84" y1="54" x2="84" y2="74" stroke="#000" stroke-width="2"/>
+  <line x1="74" y1="64" x2="94" y2="64" stroke="#000" stroke-width="2"/>
+  <!-- Forehead plate -->
+  <rect x="48" y="40" width="32" height="10" rx="3" fill="#B87AFF" stroke="#000" stroke-width="2"/>
+  <!-- Mouth -->
+  <rect x="40" y="86" width="48" height="12" rx="4" fill="#FFE600" stroke="#000" stroke-width="3"/>
+  <line x1="52" y1="86" x2="52" y2="98" stroke="#000" stroke-width="2"/>
+  <line x1="64" y1="86" x2="64" y2="98" stroke="#000" stroke-width="2"/>
+  <line x1="76" y1="86" x2="76" y2="98" stroke="#000" stroke-width="2"/>
+  <!-- Cheek accents -->
+  <rect x="26" y="78" width="10" height="10" rx="2" fill="#FF90E8" stroke="#000" stroke-width="2"/>
+  <rect x="92" y="78" width="10" height="10" rx="2" fill="#FF90E8" stroke="#000" stroke-width="2"/>
+  <!-- Ears -->
+  <rect x="16" y="56" width="10" height="18" rx="3" fill="#FFE600" stroke="#000" stroke-width="3"/>
+  <rect x="102" y="56" width="10" height="18" rx="3" fill="#FFE600" stroke="#000" stroke-width="3"/>
+</svg>

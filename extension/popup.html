@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Magpie — AI Web Agent</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
+
+    :root {
+      --border-width: 3px;
+      --border-color: #000000;
+      --border-radius: 4px;
+      --shadow-sm: 2px 2px 0px var(--border-color);
+      --shadow-md: 4px 4px 0px var(--border-color);
+      --shadow-lg: 6px 6px 0px var(--border-color);
+      --bg-primary: #FFFDF8;
+      --color-accent-yellow: #FFE600;
+      --color-accent-pink: #FF90E8;
+      --color-accent-cyan: #63E6E2;
+      --color-accent-green: #7DFFB3;
+      --color-accent-orange: #FF6B00;
+      --color-accent-lavender: #B8A1E8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 420px;
+      padding: 20px;
+      font-family: 'Space Mono', monospace;
+      background: var(--bg-primary);
+      color: #000;
+      margin: 0;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .header-logo {
+      width: 36px; height: 36px;
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0;
+    }
+    .header-badge {
+      background: var(--color-accent-cyan);
+      border: 2px solid var(--border-color);
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      font-family: 'Space Mono', monospace;
+    }
+    .header-actions { margin-left: auto; display: flex; gap: 6px; }
+    .header-actions button {
+      background: var(--color-accent-lavender);
+      border: 2px solid var(--border-color);
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: var(--border-radius);
+      font-family: 'Space Mono', monospace;
+      transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-actions button:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0px #000; }
+    .header-actions button:active { transform: translate(1px,1px); box-shadow: 1px 1px 0px #000; }
+
+    /* ── Inputs ── */
+    .neo-input {
+      width: 100%;
+      padding: 10px;
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      background: #fff;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s;
+    }
+    .neo-input:focus {
+      outline: none;
+      box-shadow: var(--shadow-md);
+      transform: translate(-2px, -2px);
+    }
+    select.neo-input { cursor: pointer; }
+
+    /* ── Buttons ── */
+    .neo-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--color-accent-yellow);
+      color: #000;
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      text-transform: uppercase;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.15s cubic-bezier(0.2,0,0,1), box-shadow 0.15s cubic-bezier(0.2,0,0,1);
+    }
+    .neo-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-lg);
+      background-color: var(--color-accent-green);
+    }
+    .neo-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #000;
+    }
+    .neo-btn.secondary { background-color: var(--color-accent-cyan); }
+
+    /* ── Result Panel ── */
+    #result {
+      margin-top: 16px;
+      padding: 14px;
+      background-color: #fff;
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius);
+      min-height: 70px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-shadow: var(--shadow-md);
+    }
+    .loading {
+      background: var(--color-accent-pink);
+      display: inline-block;
+      padding: 4px 8px;
+      border: 2px solid var(--border-color);
+      font-weight: bold;
+      font-size: 12px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+    /* ── Settings Panel ── */
+    .settings-panel {
+      border: var(--border-width) solid var(--border-color);
+      padding: 12px;
+      border-radius: var(--border-radius);
+      background: #fff;
+      box-shadow: var(--shadow-md);
+    }
+    .settings-panel summary {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+      color: #000;
+      outline: none;
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+    .settings-group {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .settings-group label {
+      font-size: 12px;
+      font-weight: bold;
+      background: var(--color-accent-pink);
+      display: inline-block;
+      padding: 2px 6px;
+      border: 2px solid var(--border-color);
+      width: fit-content;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .hint {
+      font-size: 11px;
+      margin-top: -4px;
+      margin-bottom: 2px;
+      line-height: 1.4;
+      color: #444;
+    }
+    #save-status {
+      font-size: 12px;
+      font-weight: bold;
+      background: var(--color-accent-green);
+      padding: 4px 8px;
+      border: 2px solid var(--border-color);
+      display: none;
+      width: fit-content;
+    }
+
+    /* ── Container ── */
+    .container { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Provider Quick-Tags ── */
+    .provider-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: -4px;
+    }
+    .provider-info .tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 2px solid var(--border-color);
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Header ─── -->
+  <div class="header">
+    <img class="header-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' fill='%23FFFDF8' rx='12'/%3E%3Crect x='24' y='36' width='80' height='70' rx='8' fill='%23FFE600' stroke='%23000' stroke-width='4'/%3E%3Cline x1='64' y1='36' x2='64' y2='20' stroke='%23000' stroke-width='4'/%3E%3Ccircle cx='64' cy='16' r='6' fill='%23B87AFF' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='44' cy='64' r='14' fill='%237DFFB3' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='84' cy='64' r='14' fill='%237DFFB3' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='44' cy='64' r='5' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cline x1='44' y1='54' x2='44' y2='74' stroke='%23000' stroke-width='2'/%3E%3Cline x1='34' y1='64' x2='54' y2='64' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='84' cy='64' r='5' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cline x1='84' y1='54' x2='84' y2='74' stroke='%23000' stroke-width='2'/%3E%3Cline x1='74' y1='64' x2='94' y2='64' stroke='%23000' stroke-width='2'/%3E%3Crect x='48' y='40' width='32' height='10' rx='3' fill='%23B87AFF' stroke='%23000' stroke-width='2'/%3E%3Crect x='40' y='86' width='48' height='12' rx='4' fill='%23FFE600' stroke='%23000' stroke-width='3'/%3E%3Cline x1='52' y1='86' x2='52' y2='98' stroke='%23000' stroke-width='2'/%3E%3Cline x1='64' y1='86' x2='64' y2='98' stroke='%23000' stroke-width='2'/%3E%3Cline x1='76' y1='86' x2='76' y2='98' stroke='%23000' stroke-width='2'/%3E%3Crect x='26' y='78' width='10' height='10' rx='2' fill='%23FF90E8' stroke='%23000' stroke-width='2'/%3E%3Crect x='92' y='78' width='10' height='10' rx='2' fill='%23FF90E8' stroke='%23000' stroke-width='2'/%3E%3Crect x='16' y='56' width='10' height='18' rx='3' fill='%23FFE600' stroke='%23000' stroke-width='3'/%3E%3Crect x='102' y='56' width='10' height='18' rx='3' fill='%23FFE600' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E" alt="Magpie">
+    <h1>Magpie</h1>
+    <span class="header-badge">AI AGENT</span>
+    <div class="header-actions">
+      <button id="open-tab-btn" title="Open in new tab">↗ Tab</button>
+    </div>
+  </div>
+
+  <!-- ─── Main ─── -->
+  <div class="container">
+
+    <!-- Settings -->
+    <details class="settings-panel" id="settings-panel">
+      <summary>⚙️ LLM Provider</summary>
+      <div class="settings-group">
+
+        <label>Provider</label>
+        <select id="llm-provider" class="neo-input">
+          <option value="ollama">🦙 Local Ollama</option>
+          <option value="openai">🟢 OpenAI</option>
+          <option value="groq">⚡ Groq (Fast)</option>
+          <option value="mistral">🔷 Mistral AI</option>
+          <option value="nvidia">🟩 NVIDIA NIM</option>
+          <option value="openrouter">🌐 OpenRouter</option>
+          <option value="together">🤝 Together AI</option>
+          <option value="custom">🔧 Custom Endpoint</option>
+        </select>
+
+        <div class="provider-info" id="provider-models"></div>
+
+        <label>Base URL</label>
+        <div class="hint" id="base-url-hint">Auto-filled for selected provider.</div>
+        <input type="text" id="base-url" class="neo-input" placeholder="http://localhost:11434/v1">
+
+        <label>API Key</label>
+        <div class="hint" id="api-key-hint">Enter your API key.</div>
+        <input type="password" id="api-key" class="neo-input" placeholder="sk-...">
+
+        <label>Model Name</label>
+        <div class="hint" id="model-hint">Select a model from the tags above or type your own.</div>
+        <input type="text" id="model-name" class="neo-input" placeholder="llama3">
+
+        <button id="save-settings-btn" class="neo-btn secondary">Save Config ➔</button>
+        <span id="save-status">SAVED! ✱</span>
+      </div>
+    </details>
+
+    <!-- Query -->
+    <textarea id="query" class="neo-input" rows="3" placeholder="Ask Magpie anything... e.g. Summarize the latest news about AI"></textarea>
+    <button id="ask-btn" class="neo-btn">Search & Analyze ➔</button>
+  </div>
+
+  <!-- Result -->
+  <div id="result">Results will appear here...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
