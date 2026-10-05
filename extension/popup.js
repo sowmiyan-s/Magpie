@@ -123,6 +123,8 @@ const searchToggle = document.getElementById('search-enabled-toggle');
 const tabToggle = document.getElementById('tab-context-toggle');
 const chipSearch = document.getElementById('chip-search');
 const chipTab = document.getElementById('chip-tab');
+const chipCrawl = document.getElementById('chip-crawl');
+const crawlToggle = document.getElementById('crawl-enabled-toggle');
 const modeSelect = document.getElementById('mode-select');
 
 // Settings Elements
@@ -170,9 +172,7 @@ btnToggleSettings.addEventListener('click', () => {
   }
 });
 
-headerModelChip.addEventListener('click', () => {
-  switchView('settings');
-});
+
 
 btnSettingsDone.addEventListener('click', () => {
   switchView('main');
@@ -203,6 +203,14 @@ chipTab.addEventListener('click', (e) => {
   }
   chipTab.classList.toggle('active', tabToggle.checked);
   chrome.storage.local.set({ includeTabContext: tabToggle.checked });
+});
+
+chipCrawl.addEventListener('click', (e) => {
+  if (e.target.tagName !== 'INPUT') {
+    crawlToggle.checked = !crawlToggle.checked;
+  }
+  chipCrawl.classList.toggle('active', crawlToggle.checked);
+  chrome.storage.local.set({ crawlEnabled: crawlToggle.checked });
 });
 
 modeSelect.addEventListener('change', (e) => {
@@ -278,20 +286,34 @@ function checkBackendHealth() {
   serverStatusText.textContent = 'Checking...';
   serverStatusDot.style.background = '#94A3B8';
 
-  chrome.runtime.sendMessage({ action: 'check_backend' }, (response) => {
-    if (chrome.runtime.lastError || !response || !response.online) {
-      serverStatusPill.className = 'server-status offline';
-      serverStatusText.textContent = 'Offline (Run app.py)';
-      serverStatusDot.style.background = '#EF4444';
-      headerStatusDot.classList.add('offline');
-      headerModelChip.title = 'Backend Offline — start app.py';
-    } else {
-      serverStatusPill.className = 'server-status online';
-      serverStatusText.textContent = 'Online';
-      serverStatusDot.style.background = '#10B981';
-      headerStatusDot.classList.remove('offline');
-      headerModelChip.title = `Agent Online (Backend Connected)`;
-    }
+  chrome.storage.local.get(['apiKey', 'provider', 'baseUrl'], (settings) => {
+    const isLocal = settings.provider === 'ollama' || (settings.baseUrl && settings.baseUrl.includes('localhost'));
+    const hasKey = settings.apiKey && settings.apiKey.trim().length > 0;
+    
+    chrome.runtime.sendMessage({ action: 'check_backend' }, (response) => {
+      if (!isLocal && !hasKey) {
+        serverStatusPill.className = 'server-status offline';
+        serverStatusText.textContent = 'No API Key';
+        serverStatusDot.style.background = '#EF4444';
+        headerStatusDot.classList.add('offline');
+        headerModelName.textContent = 'Offline';
+        headerModelChip.title = 'No API Key — Configure in Settings';
+      } else if (chrome.runtime.lastError || !response || !response.online) {
+        serverStatusPill.className = 'server-status offline';
+        serverStatusText.textContent = 'Backend Offline';
+        serverStatusDot.style.background = '#EF4444';
+        headerStatusDot.classList.add('offline');
+        headerModelName.textContent = 'Offline';
+        headerModelChip.title = 'Backend Offline — start app.py';
+      } else {
+        serverStatusPill.className = 'server-status online';
+        serverStatusText.textContent = 'Online';
+        serverStatusDot.style.background = '#10B981';
+        headerStatusDot.classList.remove('offline');
+        headerModelName.textContent = 'Online';
+        headerModelChip.title = 'Agent Online (Backend Connected)';
+      }
+    });
   });
 }
 
@@ -314,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'customBackendUrl',
     'searchEnabled',
     'includeTabContext',
+    'crawlEnabled',
     'mode'
   ], (data) => {
     const selectedProvider = data.provider || 'mistral';
@@ -334,6 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
       tabToggle.checked = Boolean(data.includeTabContext);
       chipTab.classList.toggle('active', tabToggle.checked);
     }
+    if (data.crawlEnabled !== undefined) {
+      crawlToggle.checked = Boolean(data.crawlEnabled);
+      chipCrawl.classList.toggle('active', crawlToggle.checked);
+    }
     if (data.mode !== undefined) {
       modeSelect.value = data.mode;
     }
@@ -344,25 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ─── Quick Starter Buttons ───
-document.querySelectorAll('.starter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const q = btn.getAttribute('data-query');
-    const isTab = btn.getAttribute('data-tab') === 'true';
-    const isSearch = btn.getAttribute('data-search') === 'true';
-
-    queryInput.value = q;
-    if (isTab) {
-      tabToggle.checked = true;
-      chipTab.classList.add('active');
-    }
-    if (isSearch) {
-      searchToggle.checked = true;
-      chipSearch.classList.add('active');
-    }
-    executeQuery();
-  });
-});
 
 // ─── Safe Markdown Renderer ───
 function renderMarkdown(md) {
@@ -446,6 +454,7 @@ function executeQuery() {
 
     const includeTab = tabToggle.checked;
     const searchEnabled = searchToggle.checked;
+    const crawlEnabled = crawlToggle.checked;
     const mode = modeSelect.value;
 
     const payload = {
@@ -455,6 +464,7 @@ function executeQuery() {
       apiKey: settings.apiKey || (isLocal ? 'ollama' : ''),
       modelName: settings.modelName || 'open-mistral-nemo',
       searchEnabled: searchEnabled,
+      crawlEnabled: crawlEnabled,
       includePageContext: includeTab,
       pageUrl: includeTab && currentActiveTabData ? currentActiveTabData.url : null,
       pageTitle: includeTab && currentActiveTabData ? currentActiveTabData.title : null,

@@ -42,7 +42,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           page_url: request.pageUrl || null,
           page_title: request.pageTitle || null,
           page_content: request.pageContent || null,
-          search_enabled: request.searchEnabled !== false
+          search_enabled: request.searchEnabled !== false,
+          crawl_enabled: Boolean(request.crawlEnabled),
+          mode: request.mode || 'summary'
         })
       })
       .then(async (response) => {

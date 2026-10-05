@@ -43,6 +43,7 @@ class AgentQuery(BaseModel):
     page_title: str | None = None
     page_content: str | None = None
     search_enabled: bool = True
+    crawl_enabled: bool = False
     mode: str = "default"
 
 @app.get("/")
@@ -230,16 +231,29 @@ async def handle_agent_query(payload: AgentQuery):
         scraped_content = ""
 
         # Step 1: Perform web search if enabled
-        if payload.search_enabled:
-            search_results = search_web(query, max_results=3)
+        if payload.search_enabled or payload.crawl_enabled:
+            search_results = search_web(query, max_results=5 if payload.crawl_enabled else 3)
             if search_results:
                 top_url = search_results[0].get('href', '')
-                if top_url:
-                    scraped_content = scrape_page(top_url)
-                    # If scraping was blocked or failed, fall back to search snippet
-                    if not scraped_content or scraped_content.startswith("Status code") or scraped_content.startswith("Failed to scrape"):
+                if payload.crawl_enabled:
+                    scraped_texts = []
+                    for r in search_results[:3]:
+                        h = r.get('href')
+                        if h:
+                            txt = scrape_page(h)
+                            if not txt.startswith("Status code") and not txt.startswith("Failed to scrape"):
+                                scraped_texts.append(f"Source: {r.get('title')}\n{txt[:2500]}")
+                    if scraped_texts:
+                        scraped_content = "\n\n".join(scraped_texts)
+                    else:
                         fallback_snippets = [f"{r.get('title')}: {r.get('snippet')}" for r in search_results if r.get('snippet')]
                         scraped_content = "\n".join(fallback_snippets) if fallback_snippets else "No content scraped."
+                else:
+                    if top_url:
+                        scraped_content = scrape_page(top_url)
+                        if not scraped_content or scraped_content.startswith("Status code") or scraped_content.startswith("Failed to scrape"):
+                            fallback_snippets = [f"{r.get('title')}: {r.get('snippet')}" for r in search_results if r.get('snippet')]
+                            scraped_content = "\n".join(fallback_snippets) if fallback_snippets else "No content scraped."
 
         # Step 2: Build source references
         sources_list = []
@@ -266,12 +280,10 @@ Content:
 
         # Step 4: Construct optimized prompt
         mode_instructions = ""
-        if payload.mode == "summarize":
+        if payload.mode == "summary" or payload.mode == "default":
             mode_instructions = "5. Focus exclusively on summarizing the content provided. Be brief, using bullet points for key takeaways."
         elif payload.mode == "mcq":
-            mode_instructions = "5. Generate multiple-choice questions (with options A, B, C, D and the correct answer) based on the context or query."
-        elif payload.mode == "oneword":
-            mode_instructions = "5. Provide exactly ONE WORD as your answer. No explanation, no punctuation, just one single word."
+            mode_instructions = "5. Generate multiple-choice questions (with options A, B, C, D and the correct answer) or fill-in-the-blanks based on the context or query."
 
         if search_results or tab_context_section:
             prompt = f"""You are Magpie, an intelligent web research and browser assistant.

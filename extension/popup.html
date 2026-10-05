@@ -134,24 +134,22 @@
       align-items: center;
       gap: 5px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
       background: #FFFFFF;
       border: 1.5px solid var(--border-color);
       border-radius: var(--radius-full);
       padding: 4px 10px;
-      cursor: pointer;
-      max-width: 140px;
-      transition: all 0.15s ease;
-      box-shadow: var(--shadow-subtle);
+      white-space: nowrap;
     }
-    .model-chip:hover {
-      border-color: var(--text-main);
-      transform: translateY(-1px);
+    .model-chip.offline {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .model-chip.online {
+      border-color: var(--accent-green);
     }
     .model-chip-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
     .status-dot {
@@ -236,16 +234,22 @@
     /* Search Bottom Bar */
     .search-footer {
       display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1.5px solid var(--border-color);
+    }
+    .search-footer-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding-top: 6px;
-      border-top: 1px solid var(--border-color);
+      gap: 6px;
     }
     .toggles-group {
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-wrap: wrap;
     }
     .toggle-chip {
       display: inline-flex;
@@ -264,14 +268,15 @@
     }
     .toggle-chip input { display: none; }
     .toggle-chip:hover {
-      color: var(--text-main);
-      background: #E2E8F0;
+      background: #FFFDF0;
+      border-color: var(--text-main);
     }
     .toggle-chip.active {
       color: #000;
       background: var(--primary-yellow);
       border-color: var(--text-main);
       font-weight: 700;
+      box-shadow: 1.5px 1.5px 0px #0F172A;
     }
     
     .mode-select {
@@ -294,7 +299,8 @@
     }
     .mode-select:hover, .mode-select:focus {
       color: var(--text-main);
-      background-color: #E2E8F0;
+      background-color: #FFFDF0;
+      border-color: var(--text-main);
     }
 
     /* Search Submit Button */
@@ -330,44 +336,18 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* ── Quick Starter Suggestions ── */
-    .quick-starters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .starter-btn {
-      background: #FFFFFF;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-full);
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .starter-btn:hover {
-      border-color: var(--text-main);
-      color: var(--text-main);
-      background: #FFFDF0;
-      transform: translateY(-1px);
-    }
+
 
     /* ── Result Card ── */
     .result-card {
       background: #FFFFFF;
       border: 1.5px solid var(--border-color);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-card);
       padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
     }
     .result-card.has-content {
       border-color: var(--text-main);
@@ -396,12 +376,12 @@
       gap: 4px;
     }
     .btn-action-mini {
-      background: #F8FAFC;
-      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-color);
       border-radius: var(--radius-sm);
       padding: 3px 8px;
       font-size: 10.5px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
       cursor: pointer;
       transition: all 0.12s;
@@ -409,6 +389,8 @@
     .btn-action-mini:hover {
       background: var(--primary-yellow);
       border-color: var(--text-main);
+      box-shadow: 1px 1px 0px #0F172A;
+      transform: translateY(-1px);
     }
 
     /* Result Content Typography */
@@ -469,23 +451,22 @@
       margin: 6px 0;
     }
 
-    /* Loading Pulse */
     .loading-container {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 12px;
       background: #FFFDF0;
-      border: 1px dashed var(--text-main);
+      border: 1.5px dashed var(--text-main);
       border-radius: var(--radius-md);
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
     }
     .spinner-dot {
       width: 14px;
       height: 14px;
-      border: 2px solid #CBD5E1;
+      border: 2.5px solid #CBD5E1;
       border-top-color: #000;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
@@ -503,9 +484,9 @@
     }
     .source-pill {
       font-size: 10.5px;
-      background: #F1F5F9;
+      background: #FFFFFF;
       color: var(--text-muted);
-      border: 1px solid var(--border-color);
+      border: 1.5px solid var(--border-color);
       border-radius: var(--radius-full);
       padding: 2px 8px;
       text-decoration: none;
@@ -516,10 +497,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      transition: all 0.12s;
     }
     .source-pill:hover {
-      background: #E2E8F0;
+      background: var(--primary-yellow);
       color: var(--text-main);
+      border-color: var(--text-main);
+      box-shadow: 1px 1px 0px #0F172A;
     }
 
     /* ── Settings View ── */
@@ -552,14 +536,14 @@
       align-items: center;
       gap: 5px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       padding: 2px 7px;
       border-radius: var(--radius-full);
       background: #F1F5F9;
-      border: 1px solid var(--border-color);
+      border: 1.5px solid var(--border-color);
     }
-    .server-status.online { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
-    .server-status.offline { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+    .server-status.online { background: #ECFDF5; color: #065F46; border-color: #065F46; }
+    .server-status.offline { background: #FEF2F2; color: #991B1B; border-color: #991B1B; }
 
     .form-item {
       display: flex;
@@ -586,7 +570,7 @@
     }
     .form-input-field:focus {
       border-color: var(--text-main);
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+      box-shadow: 1.5px 1.5px 0px rgba(15, 23, 42, 0.15);
     }
     .form-help {
       font-size: 10.5px;
@@ -613,7 +597,7 @@
     }
     .model-chip-select:hover {
       border-color: var(--text-main);
-      background: #FFFFFF;
+      background: #FFFDF0;
     }
     .model-chip-select.active {
       background: var(--primary-yellow);
@@ -664,6 +648,8 @@
     .btn-done:hover {
       border-color: var(--text-main);
       background: #F8FAFC;
+      box-shadow: 1.5px 1.5px 0px #0F172A;
+      transform: translateY(-1px);
     }
     .save-alert {
       font-size: 11px;
@@ -693,8 +679,8 @@
     </div>
 
     <div class="header-actions">
-      <!-- Active Model Chip (Click opens settings) -->
-      <div class="model-chip" id="header-model-chip" title="Settings — Click to configure">
+      <!-- Active Model Chip -->
+      <div class="model-chip" id="header-model-chip" title="Agent Status">
         <span class="status-dot" id="header-status-dot"></span>
         <span class="model-chip-name" id="header-model-name">Agent Online</span>
       </div>
@@ -735,11 +721,13 @@
             <input type="checkbox" id="tab-context-toggle">
             <span>📄 This Tab</span>
           </label>
+          <label class="toggle-chip" id="chip-crawl" title="Deep agentic crawling">
+            <input type="checkbox" id="crawl-enabled-toggle">
+            <span>🕷️ Crawl</span>
+          </label>
           <select id="mode-select" class="mode-select" title="Response Mode">
-            <option value="default">Default Mode</option>
-            <option value="summarize">Summarize</option>
-            <option value="mcq">MCQ Mode</option>
-            <option value="oneword">One Word</option>
+            <option value="summary">Summary</option>
+            <option value="mcq">MCQ / Fill ups</option>
           </select>
         </div>
 
@@ -750,18 +738,7 @@
       </div>
     </div>
 
-    <!-- Quick Starter Suggestions (shown when no result yet) -->
-    <div class="quick-starters" id="quick-starters">
-      <button class="starter-btn" data-query="Summarize the key points of this page in bullet points" data-tab="true">
-        📄 Summarize page
-      </button>
-      <button class="starter-btn" data-query="What are the latest AI news and breakthroughs this week?" data-search="true">
-        ⚡ Latest AI news
-      </button>
-      <button class="starter-btn" data-query="Explain quantum computing in simple terms" data-search="true">
-        🔍 Quantum computing
-      </button>
-    </div>
+
 
     <!-- Result Card -->
     <section class="result-card" id="result-card">
