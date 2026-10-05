@@ -110,6 +110,10 @@ const headerModelChip = document.getElementById('header-model-chip');
 const headerModelName = document.getElementById('header-model-name');
 const headerStatusDot = document.getElementById('header-status-dot');
 
+const offlineBanner = document.getElementById('offline-banner');
+const offlineBannerText = document.getElementById('offline-banner-text');
+const offlineBannerBtn = document.getElementById('offline-banner-btn');
+
 const queryInput = document.getElementById('query');
 const askBtn = document.getElementById('ask-btn');
 const resultCard = document.getElementById('result-card');
@@ -143,6 +147,7 @@ const serverStatusDot = document.getElementById('server-status-dot');
 const serverStatusText = document.getElementById('server-status-text');
 
 let currentActiveTabData = null;
+let isOnline = false;
 
 // ─── Detect Tab Mode ───
 if (window.innerWidth > 520 || window.location.search.includes('tab=1')) {
@@ -188,27 +193,20 @@ if (btnOpenTab) {
   });
 }
 
-// ─── Toggle Chips (Web / Tab) ───
-chipSearch.addEventListener('click', (e) => {
-  if (e.target.tagName !== 'INPUT') {
-    searchToggle.checked = !searchToggle.checked;
-  }
+// ─── Toggle Chips (Web / Tab / Crawl) ───
+// Use 'change' event on the checkbox — the <label> wraps the input so clicking
+// the chip text naturally toggles it. We just sync visuals + storage.
+searchToggle.addEventListener('change', () => {
   chipSearch.classList.toggle('active', searchToggle.checked);
   chrome.storage.local.set({ searchEnabled: searchToggle.checked });
 });
 
-chipTab.addEventListener('click', (e) => {
-  if (e.target.tagName !== 'INPUT') {
-    tabToggle.checked = !tabToggle.checked;
-  }
+tabToggle.addEventListener('change', () => {
   chipTab.classList.toggle('active', tabToggle.checked);
   chrome.storage.local.set({ includeTabContext: tabToggle.checked });
 });
 
-chipCrawl.addEventListener('click', (e) => {
-  if (e.target.tagName !== 'INPUT') {
-    crawlToggle.checked = !crawlToggle.checked;
-  }
+crawlToggle.addEventListener('change', () => {
   chipCrawl.classList.toggle('active', crawlToggle.checked);
   chrome.storage.local.set({ crawlEnabled: crawlToggle.checked });
 });
@@ -280,6 +278,44 @@ saveSettingsBtn.addEventListener('click', () => {
   });
 });
 
+// ─── Offline State Management ───
+function setOfflineState(reason) {
+  isOnline = false;
+
+  // Header chip
+  headerModelChip.className = 'model-chip offline';
+  headerStatusDot.classList.add('offline');
+  headerModelName.textContent = 'Offline';
+  headerModelChip.title = reason === 'no_key'
+    ? 'No API Key — Configure in Settings'
+    : 'Backend Offline — start app.py';
+
+  // Offline banner
+  offlineBannerText.textContent = reason === 'no_key'
+    ? 'No API key configured. Add one in Settings to enable online mode.'
+    : 'Backend server is not reachable. Start python app.py to enable online mode.';
+  offlineBanner.classList.add('visible');
+
+  // Disable search button
+  askBtn.disabled = true;
+}
+
+function setOnlineState() {
+  isOnline = true;
+
+  // Header chip
+  headerModelChip.className = 'model-chip online';
+  headerStatusDot.classList.remove('offline');
+  headerModelName.textContent = 'Online';
+  headerModelChip.title = 'Agent Online (Backend Connected)';
+
+  // Hide offline banner
+  offlineBanner.classList.remove('visible');
+
+  // Enable search button
+  askBtn.disabled = false;
+}
+
 // ─── Health Check ───
 function checkBackendHealth() {
   serverStatusPill.className = 'server-status';
@@ -289,33 +325,37 @@ function checkBackendHealth() {
   chrome.storage.local.get(['apiKey', 'provider', 'baseUrl'], (settings) => {
     const isLocal = settings.provider === 'ollama' || (settings.baseUrl && settings.baseUrl.includes('localhost'));
     const hasKey = settings.apiKey && settings.apiKey.trim().length > 0;
-    
+
+    // No API key for non-local provider → offline
+    if (!isLocal && !hasKey) {
+      setOfflineState('no_key');
+      serverStatusPill.className = 'server-status offline';
+      serverStatusText.textContent = 'No API Key';
+      serverStatusDot.style.background = '#EF4444';
+      return;
+    }
+
+    // Check backend connectivity
     chrome.runtime.sendMessage({ action: 'check_backend' }, (response) => {
-      if (!isLocal && !hasKey) {
-        serverStatusPill.className = 'server-status offline';
-        serverStatusText.textContent = 'No API Key';
-        serverStatusDot.style.background = '#EF4444';
-        headerStatusDot.classList.add('offline');
-        headerModelName.textContent = 'Offline';
-        headerModelChip.title = 'No API Key — Configure in Settings';
-      } else if (chrome.runtime.lastError || !response || !response.online) {
+      if (chrome.runtime.lastError || !response || !response.online) {
+        setOfflineState('backend_down');
         serverStatusPill.className = 'server-status offline';
         serverStatusText.textContent = 'Backend Offline';
         serverStatusDot.style.background = '#EF4444';
-        headerStatusDot.classList.add('offline');
-        headerModelName.textContent = 'Offline';
-        headerModelChip.title = 'Backend Offline — start app.py';
       } else {
+        setOnlineState();
         serverStatusPill.className = 'server-status online';
         serverStatusText.textContent = 'Online';
         serverStatusDot.style.background = '#10B981';
-        headerStatusDot.classList.remove('offline');
-        headerModelName.textContent = 'Online';
-        headerModelChip.title = 'Agent Online (Backend Connected)';
       }
     });
   });
 }
+
+// ─── Offline Banner Action ───
+offlineBannerBtn.addEventListener('click', () => {
+  switchView('settings');
+});
 
 // ─── Active Tab Loader ───
 function loadCurrentTab() {
@@ -430,17 +470,20 @@ function executeQuery() {
     return;
   }
 
+  // Guard: prevent queries when offline
+  if (!isOnline) {
+    resultDiv.innerHTML = `
+      <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:10px; color:#991B1B;">
+        <strong>Extension is Offline</strong><br>
+        ${headerModelChip.title.includes('API Key')
+          ? 'Click <strong>⚙️</strong> top-right to configure your API key.'
+          : 'Start the backend server (<code>python app.py</code>) to enable online mode.'}
+      </div>`;
+    return;
+  }
+
   chrome.storage.local.get(['baseUrl', 'apiKey', 'modelName', 'provider'], (settings) => {
     const isLocal = settings.provider === 'ollama' || (settings.baseUrl && settings.baseUrl.includes('localhost'));
-    if (!settings.apiKey && !isLocal) {
-      resultDiv.innerHTML = `
-        <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:10px; color:#991B1B;">
-          <strong>API Key Needed</strong><br>
-          Click <strong>⚙️</strong> top-right to configure your key for ${settings.provider || 'your provider'}.
-        </div>`;
-      switchView('settings');
-      return;
-    }
 
     resultCard.classList.add('has-content');
     resultTitle.innerHTML = '<span>Researching...</span>';
