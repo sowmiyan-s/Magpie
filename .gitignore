@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+powershell.cmd
+.DS_Store
+*.crx
+*.pem

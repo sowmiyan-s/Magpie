@@ -5,7 +5,7 @@
 
 ---
 
-## ✨ Features
+#web-agent# ✨ Features
 
 - 🔍 **Agentic Web Search** — Searches the web via DuckDuckGo, scrapes top results, and feeds them to your chosen LLM.
 - 🧠 **8 LLM Providers** — One-click switching between Ollama, OpenAI, Groq, Mistral AI, NVIDIA NIM, OpenRouter, Together AI, or any custom endpoint.
